@@ -1,9 +1,11 @@
 using BookStore.API.Data;
+using BookStore.API.Models;
 using BookStore.API.Repository;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpsPolicy;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -32,21 +34,28 @@ namespace BookStore.API
         {
             services.AddDbContext<BookStoreContext>(
                 options => options.UseSqlServer(Configuration.GetConnectionString("BookStoreDB")));
-            services.AddControllers();
+
+            services.AddIdentity<ApplicationUser, IdentityRole>()
+                .AddEntityFrameworkStores<BookStoreContext>()
+                .AddDefaultTokenProviders();
+
+            services.AddControllers().AddNewtonsoftJson();
+
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "BookStore.API", Version = "v1" });
             });
 
-            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-                .AddJwtBearer(options =>
-                {
-                    options.Authority = "https://localhost:5001";
-                });
+            //services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            //    .AddJwtBearer(options =>
+            //    {
+            //        options.Authority = Configuration["Authentication:Authority"];
+            //    });
 
 
-            services.AddControllers().AddNewtonsoftJson();
             services.AddTransient<IBookRepository, BookRepository>();
+            services.AddTransient<IAccountRepository, AccountRepository>();
+
             services.AddAutoMapper(typeof(Startup));
         }
 
@@ -64,7 +73,8 @@ namespace BookStore.API
 
             app.UseRouting();
 
-            app.UseAuthorization();
+            //app.UseAuthorization();
+            //app.UseAuthentication();
 
             app.UseEndpoints(endpoints =>
             {
